@@ -8,12 +8,12 @@ pipeline {
     }
 
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhub-user') // Use Jenkins credentials ID
+        DOCKER_CREDENTIALS = credentials('dockerhub-user') // Use your global Jenkins credential ID
     }
 
     parameters {
-        string defaultValue: '${BUILD_NUMBER}', description: 'Enter the version of the docker image', name: 'VERSION'
-        choice choices: ['true', 'false'], description: 'Skip test', name: 'TEST'
+        string(name: 'VERSION', defaultValue: '${BUILD_NUMBER}', description: 'Enter the version of the docker image')
+        choice(name: 'TEST', choices: ['true', 'false'], description: 'Skip test')
     }
 
     stages {
@@ -31,7 +31,7 @@ pipeline {
                 script {
                     sayHello "ITI"
                 }
-                sh "mvn clean package install -Dmaven.test.skip=${TEST}"
+                sh "mvn clean package install -Dmaven.test.skip=${params.TEST}"
             }
         }
 
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     def dockerx = new org.iti.docker()
-                    dockerx.build("java", "${VERSION}")
+                    dockerx.build("java", "${params.VERSION}")
                 }
                 sh "docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}"
             }
@@ -50,7 +50,7 @@ pipeline {
                 script {
                     def dockerx = new org.iti.docker()
                     dockerx.login("${DOCKER_CREDENTIALS_USR}", "${DOCKER_CREDENTIALS_PSW}")
-                    dockerx.push("${DOCKER_CREDENTIALS_USR}", "${VERSION}")
+                    dockerx.push("${DOCKER_CREDENTIALS_USR}", "${params.VERSION}")
                 }
             }
         }
@@ -58,21 +58,12 @@ pipeline {
 
     post {
         always {
-            sh 'echo "Running cleanup or post actions..."'
+            echo "Running cleanup or post actions..."
         }
         failure {
-            sh 'echo "The build failed. Taking some actions..."'
+            echo "The build failed. Taking some actions..."
         }
     }
 }
 
-    }
-}
-
-            node {
-                sh 'echo "The build failed. Taking some actions..."'
-            }
-        }
-    }
-}
 
