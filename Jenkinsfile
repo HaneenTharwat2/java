@@ -7,7 +7,7 @@ pipeline{
     }
 
     tools{
-        jdk "java-8"
+        jdk "java-21"
     }
 
     environment{
