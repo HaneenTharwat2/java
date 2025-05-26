@@ -2,9 +2,7 @@
 
 
 pipeline{
-    agent {
-        label 'agent-0'
-    }
+    agent any
 
     tools{
         jdk "java-21"
