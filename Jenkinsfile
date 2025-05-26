@@ -3,67 +3,30 @@
 pipeline {
     agent any
 
-    tools {
-        jdk "java-21"
-    }
-
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhub-user')
-    }
-
-    parameters {
-        string(name: 'VERSION', defaultValue: '${BUILD_NUMBER}', description: 'Enter the version of the docker image')
-        choice(name: 'TEST', choices: ['true', 'false'], description: 'Skip test')
+        IMAGE_NAME = 'haneentharwat/java-task1'
     }
 
     stages {
-        stage("VM info") {
+        stage('Build Java') {
             steps {
-                script {
-                    def VM_IP = vmIp()
-                    sh "echo ${VM_IP}"
-                }
+                buildJavaApp()
             }
         }
 
-        stage("Build java app") {
+        stage('Build Docker Image') {
             steps {
-                script {
-                    sayHello "ITI"
-                }
-                sh "mvn clean package install -Dmaven.test.skip=${params.TEST}"
+                buildDockerImage(env.IMAGE_NAME)
             }
         }
 
-        stage("Build docker image") {
+        stage('Push Docker Image') {
             steps {
-                script {
-                    def dockerx = new org.iti.docker()
-                    dockerx.build("java", "${params.VERSION}")
-                }
-                sh "docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}"
-            }
-        }
-
-        stage("Push docker image") {
-            steps {
-                script {
-                    def dockerx = new org.iti.docker()
-                    dockerx.login("${DOCKER_CREDENTIALS_USR}", "${DOCKER_CREDENTIALS_PSW}")
-                    dockerx.push("${DOCKER_CREDENTIALS_USR}", "${params.VERSION}")
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    pushDockerImage(env.IMAGE_NAME)
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo "Running cleanup or post actions..."
-        }
-        failure {
-            echo "The build failed. Taking some actions..."
         }
     }
 }
-
 
