@@ -8,8 +8,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_USER = credentials('dockerhub-user')
-        DOCKER_PASS = credentials('dockerhub-password')
+        DOCKER_CREDENTIALS = credentials('dockerhub-user')
     }
 
     parameters {
@@ -42,7 +41,8 @@ pipeline {
                     def dockerx = new org.iti.docker()
                     dockerx.build("java", "${VERSION}")
                 }
-                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                sh "docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}"
+
             }
         }
 
