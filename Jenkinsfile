@@ -71,3 +71,10 @@ pipeline {
     }
 }
 
+            node {
+                sh 'echo "The build failed. Taking some actions..."'
+            }
+        }
+    }
+}
+
