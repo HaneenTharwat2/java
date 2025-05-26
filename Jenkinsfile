@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhub-user')
+        DOCKER_CREDENTIALS = credentials('dockerhub-user') // Use Jenkins credentials ID
     }
 
     parameters {
@@ -35,23 +35,22 @@ pipeline {
             }
         }
 
-        stage("build java app image") {
+        stage("Build docker image") {
             steps {
                 script {
                     def dockerx = new org.iti.docker()
                     dockerx.build("java", "${VERSION}")
                 }
                 sh "docker login -u ${DOCKER_CREDENTIALS_USR} -p ${DOCKER_CREDENTIALS_PSW}"
-
             }
         }
 
-        stage("push java app image") {
+        stage("Push docker image") {
             steps {
                 script {
                     def dockerx = new org.iti.docker()
-                    dockerx.login("${DOCKER_USER}", "${DOCKER_PASS}")
-                    dockerx.push("${DOCKER_USER}", "${DOCKER_PASS}")
+                    dockerx.login("${DOCKER_CREDENTIALS_USR}", "${DOCKER_CREDENTIALS_PSW}")
+                    dockerx.push("${DOCKER_CREDENTIALS_USR}", "${VERSION}")
                 }
             }
         }
@@ -59,15 +58,14 @@ pipeline {
 
     post {
         always {
-            node {
-                sh 'echo "Running cleanup or post actions..."'
-            }
+            sh 'echo "Running cleanup or post actions..."'
         }
         failure {
-            node {
-                sh 'echo "The build failed. Taking some actions..."'
-            }
+            sh 'echo "The build failed. Taking some actions..."'
         }
+    }
+}
+
     }
 }
 
