@@ -1,14 +1,13 @@
 @Library('my-shared-lib') _
 
-
-pipeline{
+pipeline {
     agent any
 
-    tools{
+    tools {
         jdk "java-21"
     }
 
-    environment{
+    environment {
         DOCKER_USER = credentials('dockerhub-user')
         DOCKER_PASS = credentials('dockerhub-password')
     }
@@ -18,35 +17,38 @@ pipeline{
         choice choices: ['true', 'false'], description: 'Skip test', name: 'TEST'
     }
 
-    stages{
-        stage("VM info"){
-            steps{
-                script{
+    stages {
+        stage("VM info") {
+            steps {
+                script {
                     def VM_IP = vmIp()
                     sh "echo ${VM_IP}"
                 }
             }
         }
-        stage("Build java app"){
-            steps{
-                script{
+
+        stage("Build java app") {
+            steps {
+                script {
                     sayHello "ITI"
                 }
                 sh "mvn clean package install -Dmaven.test.skip=${TEST}"
             }
         }
-        stage("build java app image"){
-            steps{
-                script{
+
+        stage("build java app image") {
+            steps {
+                script {
                     def dockerx = new org.iti.docker()
                     dockerx.build("java", "${VERSION}")
                 }
-                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} "
+                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
             }
         }
-        stage("push java app image"){
-            steps{
-                script{
+
+        stage("push java app image") {
+            steps {
+                script {
                     def dockerx = new org.iti.docker()
                     dockerx.login("${DOCKER_USER}", "${DOCKER_PASS}")
                     dockerx.push("${DOCKER_USER}", "${DOCKER_PASS}")
@@ -55,13 +57,17 @@ pipeline{
         }
     }
 
-    post{
-        always{
-            sh "echo 'Clean the Workspace'"
-            cleanWs()
+    post {
+        always {
+            node {
+                sh 'echo "Running cleanup or post actions..."'
+            }
         }
         failure {
-            sh "echo 'failed'"
+            node {
+                sh 'echo "The build failed. Taking some actions..."'
+            }
         }
     }
 }
+
