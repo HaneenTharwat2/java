@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhub-user') // Use your global Jenkins credential ID
+        DOCKER_CREDENTIALS = credentials('dockerhub-user')
     }
 
     parameters {
